@@ -9,7 +9,7 @@
 // docx_crate.js pulls in mammoth + cheerio (heavy deps), so it's only
 // dynamically imported here when this mode actually runs — keeps it out of
 // the main bundle and in its own chunk regardless of docx mode ever being
-// used in a given session. It also needs one resources2crate core function
+// used in a given session. It also needs one chaos2crate core function
 // (writeFileAtPath) — createPlugin(deps) holds onto deps and hands it to
 // docx_crate.js's configure() once the dynamic import resolves, rather than
 // importing fs_helpers.js directly (see this repo's README).

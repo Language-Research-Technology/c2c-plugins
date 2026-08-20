@@ -9,10 +9,10 @@
 // metadata; it does not replace the input mode.
 import { FOLDER_XLSX_NAME } from "./xlsx_crate.js";
 
-// Hook names are literal strings, and core resources2crate functions arrive
+// Hook names are literal strings, and core chaos2crate functions arrive
 // via createPlugin(deps) — including loadMasp, a thunk
 // (`() => import("../masp.js")`) that keeps the heavy validator dynamically
-// imported from resources2crate's own tree. See this repo's README.
+// imported from chaos2crate's own tree. See this repo's README.
 let readFileBytes, readJsonFromFolder, loadMasp, coreDeps;
 
 export function createPlugin(deps) {

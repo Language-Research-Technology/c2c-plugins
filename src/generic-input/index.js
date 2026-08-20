@@ -9,7 +9,7 @@
 // unlike the additive hook-tapping plugins in src/plugins/index.js's
 // PLUGINS array, input-mode plugins are mutually exclusive: exactly one
 // runs per build, dispatched by pipeline.js on ctx.options.inputMode.
-// Core resources2crate functions arrive via createPlugin(deps) — see this
+// Core chaos2crate functions arrive via createPlugin(deps) — see this
 // repo's README.
 let buildFileMetadata, buildCrate;
 

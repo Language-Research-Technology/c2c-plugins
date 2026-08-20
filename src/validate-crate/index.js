@@ -3,8 +3,8 @@
 // optionSchema. ro-crate-masp is a heavy dependency (pulls in the whole
 // validator library), so it's still dynamically imported here, same as
 // before this was extracted from processFolder — deps.loadMasp is a thunk
-// resources2crate hands in (`() => import("../masp.js")`) rather than a
-// direct import, so masp.js stays dynamically imported from resources2crate's
+// chaos2crate hands in (`() => import("../masp.js")`) rather than a
+// direct import, so masp.js stays dynamically imported from chaos2crate's
 // own tree and this package never statically references it. See this
 // repo's README for the createPlugin(deps) contract.
 let loadMasp;

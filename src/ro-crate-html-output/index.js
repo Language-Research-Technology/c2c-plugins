@@ -6,7 +6,7 @@
 // and template-repo folder dropdown) and generic FSA read/write helpers are
 // imported from neutral modules rather than duplicated here.
 //
-// Core resources2crate functions (crate.js/fs_helpers.js/github.js) are used
+// Core chaos2crate functions (crate.js/fs_helpers.js/github.js) are used
 // throughout this file's helpers below, so rather than threading them as an
 // explicit parameter through every call site, createPlugin(deps) assigns
 // them once into these module-level bindings before the plugin object is

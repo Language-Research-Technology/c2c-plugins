@@ -3,7 +3,7 @@
 // Settings modal, its current location; only the fields explicitly asked to
 // move to Build options — placename/Austlang lookups — changed location).
 //
-// Hook names are literal strings and core resources2crate functions arrive
+// Hook names are literal strings and core chaos2crate functions arrive
 // via createPlugin(deps) — see this repo's README.
 let crateToXlsxBytes, writeFile, fileExists;
 

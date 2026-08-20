@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Build plugins for resources2crate — additive hook-tap plugins and mutually-exclusive input-mode plugins, split out of resources2crate's src/plugins/ into their own repo.",
+  "description": "Build plugins for chaos2crate — additive hook-tap plugins and mutually-exclusive input-mode plugins, split out of chaos2crate's src/plugins/ into their own repo.",
   "main": "index.js",
   "exports": {
     ".": "./index.js",

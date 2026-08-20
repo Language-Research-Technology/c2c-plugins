@@ -1,10 +1,10 @@
 // Registry of every plugin this package ships, keyed by the same "name"
-// each plugin's factory returns (matching resources2crate's PLUGINS array
-// order/keys before this repo existed). resources2crate's src/plugins/index.js
+// each plugin's factory returns (matching chaos2crate's PLUGINS array
+// order/keys before this repo existed). chaos2crate's src/plugins/index.js
 // imports REGISTRY/INPUT_REGISTRY, filters them against its PLUGINS env var,
-// and calls each selected factory with the resources2crate core functions it
+// and calls each selected factory with the chaos2crate core functions it
 // declares needing (see README.md's per-plugin dependency table) — nothing
-// here imports resources2crate itself, so filtering out an entry keeps its
+// here imports chaos2crate itself, so filtering out an entry keeps its
 // whole subtree (and its dynamic imports, e.g. austlang's data pack or
 // docx-input's mammoth/cheerio) out of a build that didn't ask for it.
 import { createPlugin as createXlsxCrateInput } from "./src/xlsx-crate-input/index.js";
@@ -22,7 +22,7 @@ import { createPlugin as createDocxInput } from "./src/docx-input/index.js";
 // for plugins sharing a hook stage (same reasoning as the old PLUGINS array:
 // createHookBus's priority defaults to 10 for every registration and
 // Array#sort is stable, so registration order reproduces the original
-// sequence). resources2crate is responsible for preserving this order when
+// sequence). chaos2crate is responsible for preserving this order when
 // it filters by its PLUGINS env var.
 export const REGISTRY = {
   "xlsx-crate-input": createXlsxCrateInput,
@@ -36,7 +36,7 @@ export const REGISTRY = {
 };
 
 // Input-mode plugins — mutually exclusive, keyed by inputMode rather than
-// additive like REGISTRY above (see resources2crate's pipeline.js).
+// additive like REGISTRY above (see chaos2crate's pipeline.js).
 export const INPUT_REGISTRY = {
   generic: createGenericInput,
   docx: createDocxInput,

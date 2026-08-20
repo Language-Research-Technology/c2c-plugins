@@ -5,7 +5,7 @@
 import { mergeXlsxIntoCrate } from "./xlsx.js";
 import MERGE_CONFIG from "./merge_config.json" with { type: "json" };
 
-// Hook names are literal strings and core resources2crate functions arrive
+// Hook names are literal strings and core chaos2crate functions arrive
 // via createPlugin(deps) — see this repo's README. graphEntityById (needed
 // by xlsx.js's mergeXlsxIntoCrate) is threaded through as an extra argument
 // rather than injected separately, since it's only used inside that one call.
