@@ -1,6 +1,6 @@
 # c2c-plugins
 
-Build plugins for [chaos2crate](https://github.com/benfoley/chaos2crate) —
+Build plugins for [chaos2crate](https://github.com/Language-Research-Technology/chaos2crate) —
 split out of that repo's `src/plugins/` so a deployment can pick which
 plugins it bundles instead of shipping all of them.
 
