@@ -77,8 +77,15 @@ function applyCollectionLabelOverrides(crate, options) {
 function readPublishFlag(entity) {
   // A crate configured with { array: true } (see the module-level ROCrate
   // constructors in tests and main.js) always returns property values as
-  // arrays, so a boolean publish:true round-trips as [true].
-  let v = entity?.publish;
+  // arrays, so a boolean custom:publish:true round-trips as [true].
+  //
+  // Namespaced like every other non-standard term this codebase adds
+  // (custom:participant, custom:compiler, custom:possibleDuplicate, ...) —
+  // a bare "publish" isn't a real property anywhere in these profiles, and
+  // ro-crate-excel spreadsheets (see xlsx-crate-input) carry it as a
+  // custom:publish column, typically on File entities rather than
+  // RepositoryObject/Collection.
+  let v = entity?.["custom:publish"];
   if (Array.isArray(v)) v = v[0];
   if (v === true || v === false) return v;
   if (typeof v === "string") {
@@ -103,15 +110,18 @@ function contentChildRefs(entity) {
 
 // Walks the rootDataset's hasPart/hasMember tree (collections → objects →
 // files) and decides, for each non-root entity, whether it should survive a
-// "publish subset only" build: its own publish:true/false always wins, and
-// otherwise it inherits the nearest ancestor's resolved value (so marking a
-// RepositoryCollection publish:true publishes everything under it, while an
-// individual publish:false inside it can still opt that one item out).
+// "publish subset only" build: its own custom:publish:true/false always
+// wins, and otherwise it inherits the nearest ancestor's resolved value (so
+// marking a RepositoryCollection custom:publish:true publishes everything
+// under it, while an individual custom:publish:false inside it can still
+// opt that one item out).
 //
 // A kept node also drags its ancestors along as structural shells, even when
-// an ancestor's own resolved value is false — otherwise an object explicitly
-// marked publish:true inside an otherwise-unpublished collection would still
-// get orphaned when that collection (and the root's link to it) is removed.
+// an ancestor's own resolved value is false — otherwise a File explicitly
+// marked custom:publish:true inside an otherwise-unpublished
+// collection/object (the common case — ro-crate-excel spreadsheets carry
+// this column on the File sheet) would still get orphaned when that
+// ancestor (and the root's link to it) is removed.
 function resolvePublishSubset(crate) {
   const root = crate.rootDataset;
   const rootId = root["@id"];
@@ -156,7 +166,7 @@ function resolvePublishSubset(crate) {
 export function filterCrateToPublished(crate, log) {
   const { visited, keep, sawPublishFlag } = resolvePublishSubset(crate);
   if (!sawPublishFlag) {
-    log("Publish subset only: no collection or object in this crate has a publish property set, so the generated preview will be empty. Mark at least one collection or object publish:true.", "warn");
+    log("Publish subset only: no collection/object/file in this crate has a custom:publish property set, so the generated preview will be empty. Mark at least one of them custom:publish:true.", "warn");
   }
   const toRemove = [...visited].filter((id) => !keep.has(id));
   for (const id of toRemove) crate.deleteEntity(id, { references: true });
@@ -513,7 +523,7 @@ const plugin = {
         placeholder: "https://example.org/my-site",
         hint: "Optional. The hostname this site will be published under, used to build absolute preview-card (Open Graph) image and link URLs. Leave blank to skip those tags." },
       { key: "publishOnly", label: "Publish subset only", default: false,
-        hint: "Off = every collection/object appears. On = a RepositoryCollection or RepositoryObject only appears if it has publish:true set, or sits inside a collection that has publish:true (an object's own publish:false always wins over an inherited true). Affects only this generated HTML, not ro-crate-metadata.json/.xlsx." },
+        hint: "Off = every collection/object/file appears. On = an entity only appears if it has custom:publish:true set, or sits inside a collection/object that has custom:publish:true (an entity's own custom:publish:false always wins over an inherited true) — typically a File-level column in the source spreadsheet. Affects only this generated HTML, not ro-crate-metadata.json/.xlsx." },
       { key: "styledPreview", label: "Upload template files", default: false,
         hint: "Off = the library's plain preview.", children: [
         { key: "configFile", type: "file", label: "Config (JSON)", accept: ".json,.css,.html,application/json,text/css,text/html",
