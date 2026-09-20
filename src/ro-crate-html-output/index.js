@@ -74,6 +74,95 @@ function applyCollectionLabelOverrides(crate, options) {
   }
 }
 
+function readPublishFlag(entity) {
+  // A crate configured with { array: true } (see the module-level ROCrate
+  // constructors in tests and main.js) always returns property values as
+  // arrays, so a boolean publish:true round-trips as [true].
+  let v = entity?.publish;
+  if (Array.isArray(v)) v = v[0];
+  if (v === true || v === false) return v;
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase();
+    if (s === "true") return true;
+    if (s === "false") return false;
+  }
+  return undefined;
+}
+
+function contentChildRefs(entity) {
+  const refs = [];
+  for (const prop of ["hasPart", "hasMember"]) {
+    const val = entity?.[prop];
+    if (!val) continue;
+    for (const ref of Array.isArray(val) ? val : [val]) {
+      if (ref && ref["@id"]) refs.push(ref["@id"]);
+    }
+  }
+  return refs;
+}
+
+// Walks the rootDataset's hasPart/hasMember tree (collections → objects →
+// files) and decides, for each non-root entity, whether it should survive a
+// "publish subset only" build: its own publish:true/false always wins, and
+// otherwise it inherits the nearest ancestor's resolved value (so marking a
+// RepositoryCollection publish:true publishes everything under it, while an
+// individual publish:false inside it can still opt that one item out).
+//
+// A kept node also drags its ancestors along as structural shells, even when
+// an ancestor's own resolved value is false — otherwise an object explicitly
+// marked publish:true inside an otherwise-unpublished collection would still
+// get orphaned when that collection (and the root's link to it) is removed.
+function resolvePublishSubset(crate) {
+  const root = crate.rootDataset;
+  const rootId = root["@id"];
+  const visited = new Set();
+  const parentOf = new Map();
+  const keep = new Set();
+  let sawPublishFlag = false;
+
+  function visit(id, inherited, parentId) {
+    if (visited.has(id)) return;
+    visited.add(id);
+    if (parentId !== undefined) parentOf.set(id, parentId);
+    const entity = crate.getEntity(id);
+    if (!entity) return;
+    const own = readPublishFlag(entity);
+    if (own !== undefined) sawPublishFlag = true;
+    const effective = own !== undefined ? own : inherited;
+    if (id !== rootId && effective === true) keep.add(id);
+    for (const childId of contentChildRefs(entity)) visit(childId, effective, id);
+  }
+
+  visit(rootId, undefined, undefined);
+  visited.delete(rootId);
+
+  for (const id of [...keep]) {
+    let cur = parentOf.get(id);
+    while (cur !== undefined && cur !== rootId && !keep.has(cur)) {
+      keep.add(cur);
+      cur = parentOf.get(cur);
+    }
+  }
+
+  return { visited, keep, sawPublishFlag };
+}
+
+// Mutates `crate` in place, removing every collection/object/file under the
+// root that didn't resolve to published. Safe to call destructively here
+// because this hook runs last among the output:write writers (see the
+// module doc comment above applyCollectionLabelOverrides) — the JSON/XLSX
+// metadata files have already been written from the full crate by the time
+// this runs, so only the generated HTML is affected.
+export function filterCrateToPublished(crate, log) {
+  const { visited, keep, sawPublishFlag } = resolvePublishSubset(crate);
+  if (!sawPublishFlag) {
+    log("Publish subset only: no collection or object in this crate has a publish property set, so the generated preview will be empty. Mark at least one collection or object publish:true.", "warn");
+  }
+  const toRemove = [...visited].filter((id) => !keep.has(id));
+  for (const id of toRemove) crate.deleteEntity(id, { references: true });
+  log(`Publish subset only: kept ${keep.size} of ${visited.size} collection/object/file entit${visited.size === 1 ? "y" : "ies"}.`, "muted");
+}
+
 function formatDurationMs(ms) {
   if (!Number.isFinite(ms) || ms < 0) return "0.00s";
   if (ms < 1000) return `${ms}ms`;
@@ -423,6 +512,8 @@ const plugin = {
       { key: "domain", type: "text", label: "Site domain",
         placeholder: "https://example.org/my-site",
         hint: "Optional. The hostname this site will be published under, used to build absolute preview-card (Open Graph) image and link URLs. Leave blank to skip those tags." },
+      { key: "publishOnly", label: "Publish subset only", default: false,
+        hint: "Off = every collection/object appears. On = a RepositoryCollection or RepositoryObject only appears if it has publish:true set, or sits inside a collection that has publish:true (an object's own publish:false always wins over an inherited true). Affects only this generated HTML, not ro-crate-metadata.json/.xlsx." },
       { key: "styledPreview", label: "Upload template files", default: false,
         hint: "Off = the library's plain preview.", children: [
         { key: "configFile", type: "file", label: "Config (JSON)", accept: ".json,.css,.html,application/json,text/css,text/html",
@@ -443,6 +534,7 @@ const plugin = {
         return;
       }
       try {
+        if (options.publishOnly) filterCrateToPublished(crate, log);
         applyCollectionLabelOverrides(crate, options);
         // resolveTerm() (used below to place profile-declared property
         // names) needs the context resolved first — crateToPreviewHtml/
